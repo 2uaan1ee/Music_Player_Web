@@ -176,6 +176,8 @@ const app = {
                 _this.nextSong();
             }
             audio.play();
+            _this.render();
+            _this.scrollToActiveSong();
         };
         // Xử lý khi prev song
         prevBtn.onclick = function() {
@@ -186,6 +188,8 @@ const app = {
                 _this.prevSong();
             }
             audio.play();
+            _this.render();
+            _this.scrollToActiveSong();
         };
         // Xử lý bật / tắt random song
         randomBtn.onclick = function(e) {
@@ -212,6 +216,16 @@ const app = {
         heading.textContent = this.currentSong.name;
         cdThumb.style.backgroundImage = `url('${this.currentSong.image}')`;
         audio.src = this.currentSong.path;
+    },
+
+    scrollToActiveSong: function() {
+        setTimeout(() => { 
+            $('.song.active').scrollIntoView({
+                behavior:'smooth',
+                block: 'nearest',
+
+            });
+        }, 300);
     },
 
     nextSong: function() {
