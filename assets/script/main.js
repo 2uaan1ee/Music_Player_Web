@@ -10,6 +10,8 @@ const player = $('.player');
 const progress = $('#progress');
 const prevBtn = $('.btn-prev');
 const nextBtn = $('.btn-next');
+const randomBtn = $('.btn-random');
+const repeatBtn = $('.btn-repeat');
 
 const app = {
     currentIndex: 0,
@@ -167,14 +169,43 @@ const app = {
         };
         // Xử lý khi next song 
         nextBtn.onclick = function() {
-            _this.nextSong();
+            if(_this.isRandom) {
+                _this.playRandomSong();
+            }
+            else {
+                _this.nextSong();
+            }
             audio.play();
         };
         // Xử lý khi prev song
         prevBtn.onclick = function() {
-            _this.prevSong();
+            if(_this.isRandom) {
+                _this.playRandomSong();
+            }
+            else {
+                _this.prevSong();
+            }
             audio.play();
         };
+        // Xử lý bật / tắt random song
+        randomBtn.onclick = function(e) {
+            _this.isRandom = !_this.isRandom;
+            randomBtn.classList.toggle('active', _this.isRandom);
+        }
+        // Xử lý khi repeat song
+        repeatBtn.onclick = function(e) {
+            _this.isRepeat = !_this.isRepeat;
+            repeatBtn.classList.toggle('active', _this.isRepeat);
+        }
+        // Xử lý next song khi audio ended
+        audio.onended = function() {
+            if(_this.isRepeat) {
+                audio.play();
+            }
+            else {
+                nextBtn.click();
+            }
+        }
     },
 
     loadCurrentSong: function() {
@@ -196,6 +227,15 @@ const app = {
         if(this.currentIndex < 0) {
             this.currentIndex = this.songs.length - 1;
         }
+        this.loadCurrentSong();
+    },
+
+    playRandomSong: function() {
+        let newIndex;
+        do {
+            newIndex = Math.floor(Math.random() * this.songs.length);
+        } while(newIndex === this.currentIndex);
+        this.currentIndex = newIndex;
         this.loadCurrentSong();
     },
 
