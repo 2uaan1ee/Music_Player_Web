@@ -1,5 +1,8 @@
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
+
+const PLAYER_STORAGE_KEY = 'F8_PLAYER';
+
 const cd = $('.cd');
 const playlist = $('.playlist');
 const heading = $('header h2');
@@ -18,6 +21,13 @@ const app = {
     isPlaying: false,
     isRandom: false,
     isRepeat: false,
+
+    config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
+    setConfig: function(key, value) {
+        this.config[key] = value;
+        localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(this.config));
+    },
+
     songs: [
         {
             name: "CATCH ME IF YOU CAN",
@@ -107,17 +117,17 @@ const app = {
 
         // Xử lý CD quay / dừng
         const cdThumbAnimate = cdThumb.animate([
-            { transform: 'rotate(360deg)' },
+        { 
+            transform: 'rotate(360deg)'
+        },
         ], {
             duration: 10000, // 10 seconds
             iterations: Infinity,
         }) 
         cdThumbAnimate.pause();
-
         document.onscroll = () => {
             const scrollTop = window.scrollY || document.documentElement.scrollTop;
             let newCdWidth = cdWidth - scrollTop;
-
             cd.style.width = newCdWidth > 0 ? newCdWidth + 'px' : 0;
             cd.style.opacity = newCdWidth / cdWidth;
         }
@@ -194,11 +204,13 @@ const app = {
         // Xử lý bật / tắt random song
         randomBtn.onclick = function(e) {
             _this.isRandom = !_this.isRandom;
+            _this.setConfig('isRandom', _this.isRandom);
             randomBtn.classList.toggle('active', _this.isRandom);
         }
         // Xử lý khi repeat song
         repeatBtn.onclick = function(e) {
             _this.isRepeat = !_this.isRepeat;
+            _this.setConfig('isRepeat', _this.isRepeat);
             repeatBtn.classList.toggle('active', _this.isRepeat);
         }
         // Xử lý next song khi audio ended
@@ -210,12 +222,35 @@ const app = {
                 nextBtn.click();
             }
         }
+        // Lắng nghe hành vi click vào playlist
+        playlist.onclick = function(e) {
+            const songNode = e.target.closest('.song:not(.active)');
+            // Xử lý khi click vào song thì chuyển đến song đó
+            if(songNode || e.target.closest('.option')) { // Trả về element là chính nó hoặc thẻ cha của nó hoặc là NULL
+                // Xử lý khi click vào song
+                if(songNode) {
+                    _this.currentIndex = Number(songNode.dataset.index);
+                    _this.loadCurrentSong();
+                    _this.render();
+                    audio.play();
+                }
+                // Xử lý khi click vào option
+                if(e.target.closest('.option')) {
+
+                }
+            }
+        }
     },
 
     loadCurrentSong: function() {
         heading.textContent = this.currentSong.name;
         cdThumb.style.backgroundImage = `url('${this.currentSong.image}')`;
         audio.src = this.currentSong.path;
+    },
+
+    loadConfig: function() {
+        this.isRandom = this.config.isRandom;
+        this.isRepeat = this.config.isRepeat;
     },
 
     scrollToActiveSong: function() {
@@ -254,6 +289,8 @@ const app = {
     },
 
     start: function() {
+        // Gán cấu hình từ config vào ứng dụng (đọc từ Local storage, lưu vào config và load config)
+        this.loadConfig();
         // Định nghĩa các thuộc tính cho Object
         this.definePropert()
         // Lắng nghe và xử lý các sự kiện
@@ -262,8 +299,10 @@ const app = {
         this.loadCurrentSong();
         // Render playlist
         this.render();
+        // Hiển thị trạng thái ban đầu của button repeat và random
+        randomBtn.classList.toggle('active', this.isRandom);
+        repeatBtn.classList.toggle('active', this.isRepeat);
     },
-
-    
+  
 }
 app.start();
